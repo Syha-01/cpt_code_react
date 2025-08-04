@@ -7,12 +7,13 @@ export default function Search() {
   const [cptCodes, setCptCodes] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // useEffect(() => {
-  //   fetchCPTCodes();
-  // }, []);
-
   const fetchCPTCodes = async () => {
-    const { data, error } = await supabase.from('cpt_code_v3').select('SELECT code, long_description, FROM cpt_code_v3 WHERE column_name = {searchTerm};');
+    const codes = searchTerm.split(',').map(code => code.trim());
+    const { data, error } = await supabase
+      .from('cpt_code_v3')
+      .select('code, long_description, short_description')
+      .in('code', codes);
+
     if (error) {
       console.error('Error fetching CPT codes:', error);
     } else {
@@ -27,7 +28,9 @@ export default function Search() {
       id="cptSearch"
       placeholder="Enter CPT codes (e.g., 97110, 97140)"
       autoComplete="off"
-    ></textarea>
+      onChange={(e) => setSearchTerm(e.target.value)}
+      value={searchTerm}
+    />
     <button onClick={fetchCPTCodes}>
       Fetch Codes
     </button>
@@ -36,10 +39,10 @@ export default function Search() {
                 <button id="copyButton" className="icon-button" title="Copy Results">
 
                 </button>
-                <p class="placeholder">Results will appear here.</p>
+                {cptCodes.length === 0 && <p className="placeholder">Results will appear here.</p>}
                 <ul>
       {cptCodes.map((code) => (
-        <li key={code.id}>
+        <li key={code.code}>
           <p>{code.code}</p>
           <p>{code.short_description}</p>
           <p>{code.long_description}</p>
